@@ -82,28 +82,36 @@ class Player {
 	private static void loadEntity(Scanner in, Entities entities) {
 		int entitiesIn = in.nextInt();
 		for (int i = 0; i < entitiesIn; i++) {
-			int entityType = in.nextInt();
-			int owner = in.nextInt();
-			int x = in.nextInt();
-			int y = in.nextInt();
-			int param1 = in.nextInt();
-			int param2 = in.nextInt();
-
-			Entity e = null;
-
-			switch (entityType) {
-			case Configuration.ENTITY_BOMB:
-				e = new Bomb(x, y, owner, param1, param2);
-				break;
-			case Configuration.ENTITY_JOUEUR:
-				e = new Joueur(x, y, owner, param1, param2);
-				break;
-			}
-
-			entities.addEntity(e);
-
+			loadAnEntity(in, entities);
 		}
 		in.nextLine();
+	}
+
+	private static void loadAnEntity(Scanner in, Entities entities) {
+		int entityType = in.nextInt();
+		int owner = in.nextInt();
+		int x = in.nextInt();
+		int y = in.nextInt();
+		int param1 = in.nextInt();
+		int param2 = in.nextInt();
+
+		Entity e = null;
+
+		switch (entityType) {
+		case Configuration.ENTITY_BOMB:
+			e = new Bomb(x, y, owner, param1, param2);
+			break;
+		case Configuration.ENTITY_JOUEUR:
+			e = new Joueur(x, y, owner, param1, param2);
+			break;
+		case Configuration.ENTITY_ITEM : 
+			if(param1 == Configuration.ITEM_RANGE){
+				e = new ItemRange(x,y); 
+			}else if(param1 == Configuration.ITEM_BOMB){
+				e = new ItemBomb(x,y); 
+			}
+		}
+		entities.addEntity(e);
 	}
 
 	private static void loadGrid(Scanner in, Grid grid) {
@@ -169,8 +177,12 @@ class Intention {
 }
 
 class Configuration {
+	public static final int ITEM_BOMB = 1;
+	public static final int ITEM_RANGE = 2;
+	
 	public static final int ENTITY_JOUEUR = 0;
 	public static final int ENTITY_BOMB = 1;
+	public static final int ENTITY_ITEM = 2;
 
 	public static int myId;
 	public static int height;
@@ -181,11 +193,14 @@ class Entities {
 	List<Entity> list;
 	List<Joueur> joueurs;
 	List<Bomb> bombs;
+	List<Item> items; 
+	
 
 	public Entities() {
 		list = new ArrayList<Entity>();
 		joueurs = new ArrayList<Joueur>();
 		bombs = new ArrayList<Bomb>();
+		items = new ArrayList<Item>();
 	}
 
 	public void addEntity(Entity e) {
@@ -195,6 +210,9 @@ class Entities {
 		}
 		if (e instanceof Bomb) {
 			bombs.add((Bomb) e);
+		}
+		if(e instanceof Item){
+			items.add((Item) e); 
 		}
 
 	}
@@ -242,6 +260,30 @@ class Bomb extends Entity {
 		this.leftRoundToExplode = leftRoundToExplode;
 		this.explodingRange = explodingRange;
 	}
+}
+
+class Item extends Entity{
+
+	public Item(int x, int y) {
+		super(x, y, 0);
+	}
+	
+}
+
+class ItemRange extends Item{
+
+	public ItemRange(int x, int y) {
+		super(x, y);
+	}
+	
+}
+
+class ItemBomb extends Item{
+
+	public ItemBomb(int x, int y) {
+		super(x, y);
+	}
+	
 }
 
 class Position {
@@ -505,3 +547,10 @@ class Wall extends Tuile {
 	}
 }
 
+class Evaluate{
+	public static int evaluatePosition(){
+
+		//TODO
+		return 0; 
+	}
+}

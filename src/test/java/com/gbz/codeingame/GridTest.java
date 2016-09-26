@@ -17,9 +17,5 @@ import org.junit.Test;
 
 public class GridTest {
 
-	
-	@Test 
-	public void calculateAccessibleTuileForPlayer_Basic_test(){
-		Player.Grid = new Player.Grid(); 
-	}
+
 }
