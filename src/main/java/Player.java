@@ -8,6 +8,15 @@ import java.math.*;
  **/
 class Player {
 
+	/*TODO : 
+	 * faire les item
+	 * les rammasser
+	 * rester hors range des explosions.
+	 * 
+	 * 
+	 */
+	
+	
 	public static void main(String args[]) {
 		Scanner in = new Scanner(System.in);
 		loadConfiguration(in);
@@ -32,6 +41,8 @@ class Player {
 		// Intention intent = new Intention(Mouvement.BOMB, 6, 5);
 		Joueur myPlayer = entities.getMyPlayer();
 
+		grid.calculateAccessibleTuileForPlayer(myPlayer);
+
 		grid.resolvePendingExplosition(entities.bombs);
 
 		int res[][] = grid.getNumberHitBoxForBomb(myPlayer.explodingRange);
@@ -41,9 +52,11 @@ class Player {
 		 * System.err.println(""); }
 		 */
 
+		grid.reduceBombingSpotToWalkablePath(myPlayer.owner, res);
+
 		Position pos = getBestBombingSpot(myPlayer, res);
 
-		if (myPlayer.nbLeftBomb == 1 && myPlayer.pos.equals(pos)) {
+		if (myPlayer.nbLeftBomb >= 1 && myPlayer.pos.equals(pos)) {
 			intent.move = Mouvement.BOMB;
 		} else {
 			intent.move = Mouvement.MOVE;
@@ -101,7 +114,9 @@ class Player {
 			for (int i = 0; i < tab.length; i++) {
 				if (tab[i].compareTo(".") == 0) {
 					grid.grid[i][y] = new Sol();
-				} else {
+				} else if(tab[i].compareTo("X") == 0){
+					grid.grid[i][y] = new Wall();
+				}else{
 					grid.grid[i][y] = new Caisse();
 				}
 
@@ -259,6 +274,8 @@ class Position {
 class Grid {
 	public Tuile[][] grid;
 
+	public Map<Integer, boolean[][]> playerMobility;
+
 	public Grid() {
 		grid = new Tuile[Configuration.width][Configuration.height];
 
@@ -267,27 +284,73 @@ class Grid {
 				grid[i][y] = new Tuile();
 			}
 		}
+
+		playerMobility = new HashMap<Integer, boolean[][]>();
+
+	}
+
+	public void reduceBombingSpotToWalkablePath(int playerId, int[][] res) {
+		boolean[][] walkablePathForPlayer = playerMobility.get(playerId);
+		if (walkablePathForPlayer != null) {
+			for (int i = 0; i < Configuration.width; i++) {
+				for (int y = 0; y < Configuration.height; y++) {
+					if (walkablePathForPlayer[i][y] == false) {
+						res[i][y] = 0;
+					}
+				}
+			}
+		}
+
+	}
+
+	public void calculateAccessibleTuileForPlayer(Joueur myPlayer) {
+		boolean[][] res = new boolean[Configuration.width][Configuration.height];
+		for (int i = 0; i < Configuration.width; i++) {
+			for (int y = 0; y < Configuration.height; y++) {
+				res[i][y] = false;
+			}
+		}
+		calculateMovingPath(myPlayer.pos, res);
+
+		playerMobility.put(myPlayer.owner, res);
+
+	}
+
+	private void calculateMovingPath(Position pos, boolean[][] res) {
+		if (!outOfBound(pos)) {
+			int x = pos.x;
+			int y = pos.y;
+			if (grid[x][y].isWalkable() && res[x][y] == false) {
+				res[x][y] = true;
+
+				calculateMovingPath(new Position(x + 1, y), res);
+				calculateMovingPath(new Position(x - 1, y), res);
+				calculateMovingPath(new Position(x, y + 1), res);
+				calculateMovingPath(new Position(x, y + 1), res);
+			}
+		}
+
 	}
 
 	public void resolvePendingExplosition(List<Bomb> bombs) {
 		for (Bomb b : bombs) {
-			resolveBomb(b, 0,1);
-			resolveBomb(b, 0,-1);
-			resolveBomb(b, 1,0);
-			resolveBomb(b, -1,0);
+			resolveBomb(b, 0, 1);
+			resolveBomb(b, 0, -1);
+			resolveBomb(b, 1, 0);
+			resolveBomb(b, -1, 0);
 		}
 
 	}
 
 	private void resolveBomb(Bomb b, int xOffset, int yOffset) {
 		boolean res = false;
-		int i = b.pos.x; 
-		int j = b.pos.y; 
+		int i = b.pos.x;
+		int j = b.pos.y;
 		for (int z = 0; z < b.explodingRange; z++) {
-			if (!outOfBound(i,j) && !res) {
+			if (!outOfBound(i, j) && !res) {
 				if (grid[i][j].isBox()) {
 					res = true;
-					grid[i][j] = new Sol(); 
+					grid[i][j] = new Sol();
 				}
 				i += xOffset;
 				j += yOffset;
@@ -300,7 +363,7 @@ class Grid {
 	public static Position getBestPositionWithinGivenMouvements(int[][] tabOfBombPlacement, int nbMouvement,
 			Position actual) {
 		Position res = new Position(0, 0);
-		res.value = 0 ; 
+		res.value = 0;
 		int nbBox = 0;
 
 		for (int i = actual.x - nbMouvement; i < actual.x + nbMouvement; i++) {
@@ -393,6 +456,7 @@ class Grid {
 class Tuile {
 
 	public boolean box;
+	public boolean walkable;
 
 	public Tuile() {
 
@@ -402,6 +466,9 @@ class Tuile {
 		return false;
 	}
 
+	public boolean isWalkable() {
+		return false;
+	}
 }
 
 class Caisse extends Tuile {
@@ -418,4 +485,23 @@ class Sol extends Tuile {
 	public String toString() {
 		return ".";
 	}
+
+	public boolean isWalkable() {
+		return true;
+	}
 }
+
+class Wall extends Tuile {
+	public String toString() {
+		return "X";
+	}
+
+	public boolean isBox() {
+		return false;
+	}
+	
+	public boolean isWalkable() {
+		return false;
+	}
+}
+
