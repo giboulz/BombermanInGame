@@ -455,11 +455,14 @@ class Grid {
 
 class Tuile {
 
+	public boolean hasItem;
 	public boolean box;
 	public boolean walkable;
+	public boolean stopDeflagration; 
 
 	public Tuile() {
-
+		hasItem = false; 
+		stopDeflagration = false; 
 	}
 
 	public boolean isBox() {
@@ -469,9 +472,22 @@ class Tuile {
 	public boolean isWalkable() {
 		return false;
 	}
+	
+	public boolean hasItem(){
+		return hasItem; 
+	}
+	
+	public boolean isStopDeflagration(){
+		return stopDeflagration; 
+	}
 }
 
 class Caisse extends Tuile {
+	public Caisse(){
+		super(); 
+		this.stopDeflagration = true; 
+	}
+	
 	public String toString() {
 		return "0";
 	}
@@ -492,6 +508,12 @@ class Sol extends Tuile {
 }
 
 class Wall extends Tuile {
+	
+	public Wall(){
+		super(); 
+		this.stopDeflagration = true; 
+	}
+	
 	public String toString() {
 		return "X";
 	}
