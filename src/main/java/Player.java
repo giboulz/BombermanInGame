@@ -1,4 +1,7 @@
 import java.util.*;
+
+
+
 import java.io.*;
 import java.math.*;
 
@@ -30,6 +33,11 @@ class Player {
 
 			loadEntity(in, entities);
 
+			for(Bomb b: entities.bombs){
+				System.err.println(b);
+			}
+			
+			
 			Intention intent = getBasicMouvementMoveAndWait(grid, entities);
 
 			System.out.println(intent);
@@ -136,6 +144,8 @@ class Player {
 		Configuration.width = in.nextInt();
 		Configuration.height = in.nextInt();
 		Configuration.myId = in.nextInt();
+		System.err.println("height :"+ Configuration.height);
+		System.err.println("width :"+ Configuration.width);
 		in.nextLine();
 	}
 }
@@ -190,10 +200,10 @@ class Configuration {
 }
 
 class Entities {
-	List<Entity> list;
-	List<Joueur> joueurs;
-	List<Bomb> bombs;
-	List<Item> items; 
+	public List<Entity> list;
+	public List<Joueur> joueurs;
+	public List<Bomb> bombs;
+	public List<Item> items;
 	
 
 	public Entities() {
@@ -202,6 +212,9 @@ class Entities {
 		bombs = new ArrayList<Bomb>();
 		items = new ArrayList<Item>();
 	}
+	
+	
+	
 
 	public void addEntity(Entity e) {
 		list.add(e);
@@ -249,16 +262,26 @@ class Joueur extends Entity {
 		this.nbLeftBomb = nbLeftBomb;
 		this.explodingRange = explodingRange;
 	}
+	
+	public String toString(){
+		return "Joueur : "+owner+" "+pos; 
+	}
 }
 
 class Bomb extends Entity {
 	public int leftRoundToExplode;
 	public int explodingRange;
+	public boolean haveExplode;
 
 	public Bomb(int x, int y, int owner, int leftRoundToExplode, int explodingRange) {
 		super(x, y, owner);
 		this.leftRoundToExplode = leftRoundToExplode;
 		this.explodingRange = explodingRange;
+		this.haveExplode = false; 
+	}
+	
+	public String toString(){
+		return (pos + " expl: "+explodingRange+" timer : "+leftRoundToExplode); 
 	}
 }
 
@@ -310,6 +333,10 @@ class Position {
 		Position other = (Position) obj;
 		return x == other.x && y == other.y;
 	}
+	
+	public String toString(){
+		return "("+x+","+y+")"; 
+	}
 
 }
 
@@ -329,6 +356,26 @@ class Grid {
 
 		playerMobility = new HashMap<Integer, boolean[][]>();
 
+	}
+	
+	public Grid(Grid g){
+		playerMobility = new HashMap<Integer, boolean[][]>();
+		for (int i = 0; i < Configuration.width; i++) {
+			for (int y = 0; y < Configuration.height; y++) {
+				Tuile t =g.grid[i][y];  
+				if(t instanceof Sol){
+					grid[i][y] = new Sol(); 
+				}
+				if(t instanceof Caisse){
+					grid[i][y] = new Caisse(); 
+				}
+				if(t instanceof Wall){
+					grid[i][y] = new Wall(); 
+				}
+				 
+			}
+		}
+		
 	}
 
 	public void reduceBombingSpotToWalkablePath(int playerId, int[][] res) {
@@ -497,6 +544,7 @@ class Grid {
 
 class Tuile {
 
+	public boolean hasBomb;
 	public boolean hasItem;
 	public boolean box;
 	public boolean walkable;
@@ -566,13 +614,5 @@ class Wall extends Tuile {
 	
 	public boolean isWalkable() {
 		return false;
-	}
-}
-
-class Evaluate{
-	public static int evaluatePosition(){
-
-		//TODO
-		return 0; 
 	}
 }
